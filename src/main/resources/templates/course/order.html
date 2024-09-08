@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <:include file="../common/css.html" title="管理"/>
+</head>
+<body>
+<!-- 正文开始 -->
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <!-- 表格工具栏 -->
+            <form class="layui-form toolbar">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">订单号:</label>
+                        <div class="layui-input-inline">
+                            <input name="orderNo" class="layui-input" placeholder="输入订单号"/>
+                        </div>
+                    </div>
+                    <div class="layui-inline">&emsp;
+                        <button class="layui-btn icon-btn" lay-filter="orderTbSearch" lay-submit>
+                            <i class="layui-icon">&#xe615;</i>搜索
+                        </button>
+                    </div>
+                </div>
+            </form>
+            <!-- 数据表格 -->
+            <table id="orderTable" lay-filter="orderTable"></table>
+        </div>
+    </div>
+</div>
+<:include file="../common/js.html"/>
+<script>
+    layui.use(['layer', 'form', 'table', 'tableX', 'util', 'admin', 'dropdown'], function () {
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var form = layui.form;
+        var table = layui.table;
+        var tableX = layui.tableX;
+        var util = layui.util;
+        var admin = layui.admin;
+
+        /* 渲染表格 */
+        var insTb = tableX.render({
+            elem: '#orderTable',
+            url: 'order/page',
+            page: true,
+            cellMinWidth: 100,
+            cols: [[
+                {type: 'checkbox'},
+                {type: 'numbers'},
+                {field: 'orderNo', title: '订单号', sort: true},
+                {field: 'name', title: '名称', sort: true},
+                {field: 'type', title: '支付方式', sort: true},
+                {field: 'jine', title: '金额', sort: true},
+                {field: 'createTime', title: '时间', sort: true},
+            ]]
+        });
+
+        /* 表格搜索 */
+        form.on('submit(orderTbSearch)', function (data) {
+            insTb.reload({where: data.field, page: {curr: 1}});
+            return false;
+        });
+
+
+    });
+</script>
+</body>
+</html>

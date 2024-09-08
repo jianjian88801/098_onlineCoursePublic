@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>我的产品</title>
+    <link rel="stylesheet" href="${ctxPath}/assets/libs/layui/css/layui.css"/>
+    <link rel="stylesheet" href="${ctxPath}/assets/css/style.css"/>
+    <link rel="stylesheet" href="${ctxPath}/assets/css/global.css"/>
+</head>
+<body>
+    <!-- 顶部 -->
+    <:include file="../common/header.html"/>
+    <div class="layui-container fly-marginTop fly-user-main">
+         <:include file="../common/user-nav.html"/>
+         <div class="fly-panel fly-panel-user" pad20>
+              <div class="layui-tab layui-tab-brief" lay-filter="user">
+                   <ul class="layui-tab-title" id="LAY_mine">
+                       <li class="layui-this"><a>我购买的产品</a></li>
+				   </ul>
+				   <div class="layui-tab-content" style="padding: 20px 0;">
+				        <div class="layui-tab-item layui-show">
+				             <table id="LAY_orderList"></table>
+				        </div>
+				   </div>
+              </div>
+         </div>
+    </div>
+    <!-- 底部 -->
+	<:include file="../common/footer.html"/>
+	<:include file="../common/js.html"/>
+	<script>
+	layui.cache.page = 'user';
+	layui.cache.user = {
+	  username: '${user.username}'
+	  ,uid: ${user.userId}
+	  ,avatar: '../../res/images/avatar/00.jpg'
+	  ,experience: 83
+	  ,sex: '男'
+	};
+	layui.config({
+	  version: "2.0.0"
+	  ,base: '${ctxPath}/assets/module/'
+	}).extend({
+	  fly: 'fly'
+	}).use('fly');
+</script>
+</body>
+</html>

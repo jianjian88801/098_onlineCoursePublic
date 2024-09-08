@@ -1,0 +1,40 @@
+<div class="fly-header layui-bg-black">
+	  <div class="layui-container">
+		<ul class="layui-nav fly-nav layui-hide-xs">
+		  <:for items="${menu}" var="item">
+		       	<li class="layui-nav-item layui-this">
+			        <a href="${item.url}"><i class="${item.icon}"></i>${item.name}</a>
+		        </li>
+		  </:for>
+		</ul>
+		<ul class="layui-nav fly-nav-user">
+		  
+		  <!-- 未登入的状态 -->
+		  <:if test="${so.isAuthenticated() == false}">
+			  <li class="layui-nav-item">
+				<a class="iconfont icon-touxiang layui-hide-xs" href="/default/login"></a>
+			  </li>
+			  <li class="layui-nav-item">
+				<a href="/default/login">登入</a>
+			  </li>
+          </:if>
+          <!-- 登入后的状态 -->
+	      <:if test="${so.isAuthenticated() == true}">
+		      <li class="layui-nav-item">
+		        <a class="fly-nav-avatar" href="javascript:;">
+		          <cite class="layui-hide-xs">${user.nickName!}</cite>
+		          <img src="https://tva1.sinaimg.cn/crop.0.0.118.118.180/5db11ff4gw1e77d3nqrv8j203b03cweg.jpg">
+		        </a>
+		        <dl class="layui-nav-child">
+		          <dd><a href="/users/index">用户中心</a></dd>
+		          <dd><a href="/users/order">我的订单</a></dd>
+		          <dd><a href="/users/release">我的发布</a></dd>
+		          <dd><a href="/users/notice">通知信息</a></dd>
+		          <hr style="margin: 5px 0;">
+		          <dd><a href="${ctxPath}/default/logout" style="text-align: center;">退出</a></dd>
+		        </dl>
+		      </li>
+	      </:if>
+    </ul>
+  </div>
+</div>

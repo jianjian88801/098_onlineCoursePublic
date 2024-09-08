@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <:include file="../common/css.html" title="管理"/>
+</head>
+<body>
+<!-- 正文开始 -->
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <!-- 表格工具栏 -->
+            <form class="layui-form toolbar">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">名称:</label>
+                        <div class="layui-input-inline">
+                            <input name="name" class="layui-input" placeholder="输入名称"/>
+                        </div>
+                    </div>
+                    <div class="layui-inline">&emsp;
+                        <button class="layui-btn icon-btn" lay-filter="noticeTbSearch" lay-submit>
+                            <i class="layui-icon">&#xe615;</i>搜索
+                        </button>
+                    </div>
+                </div>
+            </form>
+            <!-- 数据表格 -->
+            <table id="noticeTable" lay-filter="noticeTable"></table>
+        </div>
+    </div>
+</div>
+<!-- 表格操作列 -->
+<script type="text/html" id="noticeTbBar">
+    <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="edit">查看</a>
+    <a class="layui-btn layui-btn-xs" lay-event="shenhe">审核</a>
+</script>
+<!-- 表单弹窗 -->
+<script type="text/html" id="noticeEditDialog">
+    <form id="noticeEditForm" lay-filter="noticeEditForm" class="layui-form model-form">
+        <input name="id" type="hidden"/>
+        <div class="layui-form-item">
+		     <label class="layui-form-label layui-form-required">名称:</label>
+			 <div class="layui-input-block">
+				  <input name="name" placeholder="请输入名称" class="layui-input"
+				       lay-verify="required" required/>
+				  </div>
+			 </div>
+		<div class="layui-form-item">
+			<label class="layui-form-label layui-form-required">内容:</label>
+			<div class="layui-input-block">
+				 <textarea name="content" id="eContentEdt" style="display: none;"></textarea>
+			</div>
+		</div>
+		<div class="layui-form-item">
+			<label class="layui-form-label layui-form-required">资料:</label>
+			<div class="layui-input-block" style="width:700px;float: left;margin-left: 0;">
+				 <input name="url" placeholder="请上传资料" class="layui-input"
+				                       lay-verify="required" required readonly/>
+				 </div>
+		</div>
+    </form>
+</script>
+<script type="text/html" id="shEditDialog">
+    <form id="shEditForm" lay-filter="shEditForm" class="layui-form model-form">
+        <div class="layui-form-item">
+		     <label class="layui-form-label layui-form-required">审核:</label>
+			 <div class="layui-input-block">
+                  <input type="radio" name="state" value="1" title="审核通过" checked="">
+                  <input type="radio" name="state" value="2" title="不通过">
+             </div>
+        </div>
+		<div class="layui-form-item">
+			<label class="layui-form-label layui-form-required">积分:</label>
+			<div class="layui-input-block">
+                 <input name="present" placeholder="请输入积分" class="layui-input" type="number"
+				       lay-verify="required" required/>
+			</div>
+		</div>
+        <div class="layui-form-item text-right">
+            <button class="layui-btn" lay-filter="shEditSubmit" lay-submit>保存</button>
+            <button class="layui-btn layui-btn-primary" type="button" ew-event="closeDialog">取消</button>
+        </div>
+    </form>
+</script>
+<:include file="../common/js.html"/>
+<script>
+    layui.use(['layer', 'form', 'table', 'tableX', 'util', 'admin', 'dropdown','layedit'], function () {
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var form = layui.form;
+        var table = layui.table;
+        var tableX = layui.tableX;
+        var util = layui.util;
+        var admin = layui.admin;
+        var layedit = layui.layedit;
+        
+        /* 渲染表格 */
+        var insTb = tableX.render({
+            elem: '#noticeTable',
+            url: 'release/page',
+            page: true,
+            cellMinWidth: 100,
+            cols: [[
+                {type: 'checkbox'},
+                {type: 'numbers'},
+                {field: 'name', title: '名称', sort: true},
+                {field: 'content', title: '内容', sort: true},
+                {field: 'url', title: '内容', sort: true},
+                {field: 'state', title: '状态', sort: true,templet:state},
+                {field: 'createTime', title: '创建时间', sort: true},
+                {title: '操作', toolbar: '#noticeTbBar', align: 'center', width: 200, minWidth: 200}
+            ]]
+        });
+        
+        function state(d){
+  	      if(d.state == 0){
+  	         return "未审核";
+  	      }else if(d.state == 1){
+  	         return "审核通过";
+  	      }else if(d.state == 2){
+  	         return "审核不通过";
+  	      }
+  	  }
+
+        /* 表格搜索 */
+        form.on('submit(noticeTbSearch)', function (data) {
+            insTb.reload({where: data.field, page: {curr: 1}});
+            return false;
+        });
+
+        /* 表格工具条点击事件 */
+        table.on('tool(noticeTable)', function (obj) {
+            if ('edit' === obj.event) { // 修改
+                showEditModel(obj.data);
+            } else if ('shenhe' === obj.event) { 
+            	shEditModel(obj.data);
+            }
+        });
+
+
+        /* 显示表单弹窗 */
+        function showEditModel(mData) {
+            admin.open({
+                type: 1,
+                area: '1000px',
+                title: (mData ? '修改' : '添加') + '',
+                content: $('#noticeEditDialog').html(),
+                success: function (layero, dIndex) {
+                	if(mData){
+                		$('#eContentEdt').html(mData.content);
+                	}
+                	
+                	layedit.set({
+              		  uploadImage: {
+              		    url: '/course/course/edit_upload' //接口url
+              		  }
+	              	});
+	              	
+	              	var editIndex = layedit.build('eContentEdt'); // 建立编辑器
+                    // 回显表单数据
+                    form.val('noticeEditForm', mData);
+                }
+            });
+        }
+        
+        /* 显示表单弹窗 */
+        function shEditModel(mData) {
+            admin.open({
+                type: 1,
+                title: '审核',
+                content: $('#shEditDialog').html(),
+                success: function (layero, dIndex) {
+                	form.render();
+                    // 表单提交事件
+                    form.on('submit(shEditSubmit)', function (data) {
+                        var loadIndex = layer.load(2);
+                        $.post('release/shenhe', {id:mData.id,state:data.field.state,present:data.field.present,userId:mData.userId}, function (res) {
+                            layer.close(loadIndex);
+                            if (0 === res.code) {
+                                layer.close(dIndex);
+                                layer.msg(res.msg, {icon: 1});
+                                insTb.reload({page: {curr: 1}});
+                            } else {
+                                layer.msg(res.msg, {icon: 2, anim: 6});
+                            }
+                        });
+                        return false;
+                    });
+                }
+            });
+        }
+    });
+</script>
+</body>
+</html>

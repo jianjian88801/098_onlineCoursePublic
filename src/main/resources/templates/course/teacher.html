@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <:include file="../common/css.html" title="管理"/>
+    <style>
+    .layui-table, .layui-table-view {
+      margin: 10px 10px;
+    }
+    </style>
+</head>
+<body>
+<!-- 正文开始 -->
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <!-- 表格工具栏 -->
+            <form class="layui-form toolbar">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">真实姓名:</label>
+                        <div class="layui-input-inline">
+                            <input name="nickName" class="layui-input" placeholder="输入真实姓名"/>
+                        </div>
+                    </div>
+                    <div class="layui-inline">&emsp;
+                        <button class="layui-btn icon-btn" lay-filter="teacherTbSearch" lay-submit>
+                            <i class="layui-icon">&#xe615;</i>搜索
+                        </button>
+                    </div>
+                </div>
+            </form>
+            <!-- 数据表格 -->
+            <table id="teacherTable" lay-filter="teacherTable"></table>
+        </div>
+    </div>
+</div>
+<!-- 表格操作列 -->
+<script type="text/html" id="teacherTbBar">
+    <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="edit">修改</a>
+    <a class="layui-btn layui-btn-xs" lay-event="auth">授权用户</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs"
+       data-dropdown="#teacherTbDelDrop{{d.LAY_INDEX}}" no-shade="true">删除</a>
+    <div class="dropdown-menu-nav dropdown-popconfirm dropdown-top-right layui-hide"
+         id="teacherTbDelDrop{{d.LAY_INDEX}}"
+         style="max-width: 200px;white-space: normal;min-width: auto;margin-left: 10px;">
+        <div class="dropdown-anchor"></div>
+        <div class="dropdown-popconfirm-title">
+            <i class="layui-icon layui-icon-help"></i>
+            确定要删除吗？
+        </div>
+        <div class="dropdown-popconfirm-btn">
+            <a class="layui-btn" btn-cancel>取消</a>
+            <a class="layui-btn layui-btn-normal" lay-event="del">确定</a>
+        </div>
+    </div>
+</script>
+<!-- 表单弹窗 -->
+<script type="text/html" id="teacherEditDialog">
+    <form id="teacherEditForm" lay-filter="teacherEditForm" class="layui-form model-form">
+        <input name="id" type="hidden"/>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">真实姓名:</label>
+            <div class="layui-input-block">
+                <input name="nickName" placeholder="请输入真实姓名" class="layui-input"
+                       lay-verify="required" required/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">备注:</label>
+            <div class="layui-input-block">
+                <textarea name="remark" placeholder="请输入备注" class="layui-textarea"
+                       lay-verify="required" required/></textarea>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">图片:</label>
+            <div class="layui-input-block" style="width:300px;float: left;margin-left: 0;">
+                <input name="imageName" placeholder="请输入图片" class="layui-input"
+                       lay-verify="required" required readonly/>
+            </div>
+            <div class="layui-input-inline layui-btn-container" style="width:auto;">
+			   <span type="button" class="layui-btn layui-btn-primary" id="LAY_image_upload">
+				<i class="layui-icon">&#xe67c;</i>上传图片
+			   </span>
+		    </div>
+        </div>
+        <div class="layui-form-item text-right">
+            <button class="layui-btn" lay-filter="teacherEditSubmit" lay-submit>保存</button>
+            <button class="layui-btn layui-btn-primary" type="button" ew-event="closeDialog">取消</button>
+        </div>
+    </form>
+</script>
+<script type="text/html" id="userEditDialog">
+        <!-- 数据表格 -->
+        <table id="userTable" lay-filter="userTable"></table>
+</script>
+<:include file="../common/js.html"/>
+<script>
+    layui.use(['layer', 'form', 'table', 'tableX', 'util', 'admin', 'dropdown','upload'], function () {
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var form = layui.form;
+        var table = layui.table;
+        var tableX = layui.tableX;
+        var util = layui.util;
+        var admin = layui.admin;
+
+        /* 渲染表格 */
+        var insTb = tableX.render({
+            elem: '#teacherTable',
+            url: 'teacher/page',
+            page: true,
+            toolbar: ['<p>',
+                '<button lay-event="add" class="layui-btn layui-btn-sm icon-btn"><i class="layui-icon">&#xe654;</i>添加</button>&nbsp;',
+                '<button lay-event="del" class="layui-btn layui-btn-sm layui-btn-danger icon-btn"><i class="layui-icon">&#xe640;</i>删除</button>',
+                '</p>'].join(''),
+            cellMinWidth: 100,
+            cols: [[
+                {type: 'checkbox'},
+                {type: 'numbers'},
+                {field: 'nickName', title: '真实姓名', sort: true},
+                {field: 'remark', title: '备注', sort: true},
+                {field: 'imageName', title: '图片', sort: true},
+                {title:'所属用户',templet:user,sort:true},
+                {title: '操作', toolbar: '#teacherTbBar', align: 'center', width: 300, minWidth: 300}
+            ]]
+        });
+
+        /* 表格搜索 */
+        form.on('submit(teacherTbSearch)', function (data) {
+            insTb.reload({where: data.field, page: {curr: 1}});
+            return false;
+        });
+        
+        function user(d){
+        	if(d.userId == null){
+        		return "没有授权用户";
+        	}else{
+        		var username = $.ajax({url:"/course/teacher/userId",data:{userId:d.userId},async:false});
+            	return username.responseText;
+        	}
+        }
+
+        /* 表格工具条点击事件 */
+        table.on('tool(teacherTable)', function (obj) {
+            if ('edit' === obj.event) { // 修改
+                showEditModel(obj.data);
+            } else if ('del' === obj.event) { // 删除
+                doDel(obj);
+            } else if ('auth' === obj.event){
+            	userEditModel(obj.data);
+            }
+        });
+
+        /* 表格头工具栏点击事件 */
+        table.on('toolbar(teacherTable)', function (obj) {
+            if ('add' === obj.event) { // 添加
+                showEditModel();
+            } else if ('del' === obj.event) { // 删除
+                var checkRows = table.checkStatus('teacherTable');
+                if (0 === checkRows.data.length) {
+                    return layer.msg('请选择要删除的数据', {icon: 2, anim: 6});
+                }
+                var ids = checkRows.data.map(function (d) {
+                    return d.id;
+                });
+                doDel({ids: ids});
+            }
+        });
+
+        /* 显示表单弹窗 */
+        function showEditModel(mData) {
+            admin.open({
+                type: 1,
+                area:'700px',
+                title: (mData ? '修改' : '添加') + '',
+                content: $('#teacherEditDialog').html(),
+                success: function (layero, dIndex) {
+                	
+                	layui.upload.render({
+                        elem: '#LAY_image_upload'
+                        , url: '/course/teacher/upload'
+                        , accept: 'file' //指定允许上传时校验的文件类型
+                        , exts: 'jpg|png' 
+              		     , size: 102400 //最大允许上传的文件大小
+                        , before: function (obj) {
+                      	  layer.msg('正在上传中，请稍等...', {icon: 16,offset: 't',shade:0.3,offset: '170px'});
+                        }
+                        , done: function (res) {
+                            if (res.code == 0) {
+                          	  layer.msg(res.msg, {anim: 6,icon: 6,offset: 't',shade:0.3,offset: '30px',time: 1500}, function(index){
+              						//给模板url赋值
+              						$("input[name='imageName']").val("http://localhost:8098/getFileURL/file/"+res.url);
+              					});
+                            } else {
+                          	  layer.msg(res.msg, {anim: 6,icon: 5,offset: 't',shade: 0.3,offset: '30px',time: 1500});
+                            }
+                        }
+                    });
+                	
+                	
+                    // 回显表单数据
+                    form.val('teacherEditForm', mData);
+                    // 表单提交事件
+                    form.on('submit(teacherEditSubmit)', function (data) {
+                        var loadIndex = layer.load(2);
+                        $.post(mData ? 'teacher/update' : 'teacher/save', data.field, function (res) {
+                            layer.close(loadIndex);
+                            if (0 === res.code) {
+                                layer.close(dIndex);
+                                layer.msg(res.msg, {icon: 1});
+                                insTb.reload({page: {curr: 1}});
+                            } else {
+                                layer.msg(res.msg, {icon: 2, anim: 6});
+                            }
+                        });
+                        return false;
+                    });
+                }
+            });
+        }
+        
+        /* 显示表单弹窗 */
+        function userEditModel(mData) {
+            admin.open({
+                type: 1,
+                area: ['1100px','600px'],
+                title: '授权用户',
+                content: $('#userEditDialog').html(),
+                success: function (layero, dIndex) {
+                	
+                	/* 渲染表格 */
+                    var insTbAll = tableX.render({
+                        elem: '#userTable',
+                        url: 'teacher/listuser',
+                        cellMinWidth: 100,
+                        cols: [[
+                            {type: 'numbers'},
+                            {field: 'username', title: '账号', sort: true},
+                            {field: 'nickName', title: '用户名', sort: true},
+                            {field: 'sex', title: '性别', sort: true,templet:sex},
+                            {field: 'phone', title: '手机号', sort: true},
+                            {
+                                field: 'createTime', title: '创建时间', templet: function (d) {
+                                    return util.toDateString(d.createTime);
+                                }, sort: true, width: 200
+                            },
+                        ]]
+                    });
+                	
+                    function sex(d){
+                    	if(d.sex == "1"){
+                    		return "男"
+                    	}else{
+                    		return "<span style=\"color:red;\">女</span>"
+                    	}
+                    }
+
+                    /* 表格搜索 */
+                    form.on('submit(userTable)', function (data) {
+                        insTbAll.reload({where: data.field, page: {curr: 1}});
+                        return false;
+                    });
+                	
+                    table.on('rowDouble(userTable)', function(obj){
+                        $.post('teacher/updateByuserId', {userId:obj.data.userId,id:mData.id}, function (res) {
+                        	layer.closeAll();
+                            if (0 === res.code) {
+                                layer.msg(res.msg, {icon: 1});
+                            } else {
+                                layer.msg(res.msg, {icon: 2, anim: 6});
+                            }
+                        });
+                    });
+                }
+            });
+        }
+
+        /* 删除 */
+        function doDel(obj) {
+            if (obj.ids) {  // 批量删除
+                admin.confirm('确定要删除选中数据吗？', function (i) {
+                    layer.close(i);
+                    var loadIndex = layer.load(2);
+                    admin.req('teacher/removeBatch', JSON.stringify(obj.ids), function (res) {
+                        layer.close(loadIndex);
+                        if (0 === res.code) {
+                            layer.msg(res.msg, {icon: 1});
+                            insTb.reload({page: {curr: 1}});
+                        } else {
+                            layer.msg(res.msg, {icon: 2, anim: 6});
+                        }
+                    }, 'post');
+                });
+            } else {  // 单个删除
+                var loadIndex = layer.load(2);
+                $.get('teacher/remove', {id: obj.data.id}, function (res) {
+                    layer.close(loadIndex);
+                    if (0 === res.code) {
+                        layer.msg(res.msg, {icon: 1});
+                        insTb.reload({page: {curr: 1}});
+                    } else {
+                        layer.msg(res.msg, {icon: 2, anim: 6});
+                    }
+                });
+            }
+        }
+
+    });
+</script>
+</body>
+</html>

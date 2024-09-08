@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.egao.common.test.mapper.CourseMapper">
+
+    <!-- 关联查询sql -->
+    <sql id="relSelect">
+        SELECT a.*
+        FROM t_course a
+        <where>
+            <if test="page!=null and page.pageData!=null">
+				<if test="page.pageData.id != null">
+					AND a.id = #{page.pageData.id}
+				</if>
+				<if test="page.pageData.name != null">
+                    AND a.name LIKE CONCAT('%', #{page.pageData.name}, '%')
+				</if>
+				<if test="page.pageData.imageUrl != null">
+                    AND a.image_url LIKE CONCAT('%', #{page.pageData.imageUrl}, '%')
+				</if>
+				<if test="page.pageData.type != null">
+                    AND a.type LIKE CONCAT('%', #{page.pageData.type}, '%')
+				</if>
+				<if test="page.pageData.content != null">
+                    AND a.content LIKE CONCAT('%', #{page.pageData.content}, '%')
+				</if>
+				<if test="page.pageData.teacherId != null">
+					AND a.teacher_id = #{page.pageData.teacherId}
+                </if>
+				<if test="page.pageData.videoId != null">
+					AND a.video_id = #{page.pageData.videoId}
+                </if>
+                <if test="page.pageData.createTimeStart!=null">
+                    AND a.create_time &gt;= #{page.pageData.createTimeStart}
+                </if>
+                <if test="page.pageData.createTimeEnd!=null">
+                    AND a.create_time &lt;= #{page.pageData.createTimeEnd}
+                </if>
+				<if test="page.pageData.classifyId != null">
+					AND a.classify_id = #{page.pageData.classifyId}
+                </if>
+				<if test="page.pageData.modular != null">
+                    AND a.modular LIKE CONCAT('%', #{page.pageData.modular}, '%')
+				</if>
+            </if>
+        </where>
+    </sql>
+
+    <!-- 分页查询 -->
+    <select id="listPage" resultType="com.egao.common.test.entity.Course">
+        <include refid="relSelect"></include>
+    </select>
+
+    <!-- 查询全部 -->
+    <select id="listAll" resultType="com.egao.common.test.entity.Course">
+        <include refid="relSelect"></include>
+    </select>
+
+    <select id="listGgkc" resultType="com.egao.common.test.entity.Course">
+           select * from t_course where ggkc = '1' ORDER BY create_time DESC LIMIT 0,4
+    </select>
+    
+    <select id="listZykc" resultType="com.egao.common.test.entity.Course">
+           select * from t_course where zykc = '1' ORDER BY create_time DESC LIMIT 0,4
+    </select>
+    
+    <select id="listMfkc" resultType="com.egao.common.test.entity.Course">
+           select * from t_course where mfkc = '1' ORDER BY create_time DESC LIMIT 0,4
+    </select>
+    
+    <select id="listXie" resultType="com.egao.common.test.entity.Course">
+           select * from t_course ORDER BY create_time DESC LIMIT 0,10
+    </select>
+</mapper>

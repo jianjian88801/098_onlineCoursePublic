@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <:include file="../common/css.html" title="管理"/>
+    <style>
+    .layui-table, .layui-table-view {
+      margin: 10px 10px;
+    }
+    </style>
+</head>
+<body>
+<!-- 正文开始 -->
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <!-- 表格工具栏 -->
+            <form class="layui-form toolbar">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">名称:</label>
+                        <div class="layui-input-inline">
+                            <input name="name" class="layui-input" placeholder="输入名称"/>
+                        </div>
+                    </div>
+                    <div class="layui-inline">&emsp;
+                        <button class="layui-btn icon-btn" lay-filter="courseTbSearch" lay-submit>
+                            <i class="layui-icon">&#xe615;</i>搜索
+                        </button>
+                    </div>
+                </div>
+            </form>
+            <!-- 数据表格 -->
+            <table id="courseTable" lay-filter="courseTable"></table>
+        </div>
+    </div>
+</div>
+<!-- 表格操作列 -->
+<script type="text/html" id="courseTbBar">
+    <a class="layui-btn layui-btn-danger layui-btn-xs"
+       data-dropdown="#courseTbDelDrop{{d.LAY_INDEX}}" no-shade="true">移除</a>
+    <div class="dropdown-menu-nav dropdown-popconfirm dropdown-top-right layui-hide"
+         id="courseTbDelDrop{{d.LAY_INDEX}}"
+         style="max-width: 200px;white-space: normal;min-width: auto;margin-left: 10px;">
+        <div class="dropdown-anchor"></div>
+        <div class="dropdown-popconfirm-title">
+            <i class="layui-icon layui-icon-help"></i>
+            确定要移除吗？
+        </div>
+        <div class="dropdown-popconfirm-btn">
+            <a class="layui-btn" btn-cancel>取消</a>
+            <a class="layui-btn layui-btn-normal" lay-event="del">确定</a>
+        </div>
+    </div>
+</script>
+<script type="text/html" id="zykcTableloDig">
+<div class="layui-card-body">
+   <!-- 表格工具栏 -->
+   <form class="layui-form toolbar">
+        <div class="layui-form-item">
+             <div class="layui-inline">
+                 <label class="layui-form-label">名称:</label>
+                 <div class="layui-input-inline">
+                     <input name="name" class="layui-input" placeholder="输入名称"/>
+                 </div>
+             </div>
+             <div class="layui-inline">&emsp;
+                 <button class="layui-btn icon-btn" lay-filter="zykcTbSearch" lay-submit>
+                     <i class="layui-icon">&#xe615;</i>搜索
+                 </button>
+             </div>
+        </div>
+   </form>
+   <div><span style="color:red;">双击行数据添加专业课程</span></div>
+   <!-- 数据表格 -->
+   <table id="zykcTable" lay-filter="zykcTable"></table>
+</div>
+</script>
+<:include file="../common/js.html"/>
+<script>
+    layui.use(['layer', 'form', 'table', 'tableX', 'util', 'admin', 'dropdown', 'layedit','upload'], function () {
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var form = layui.form;
+        var table = layui.table;
+        var tableX = layui.tableX;
+        var util = layui.util;
+        var admin = layui.admin;
+        var layedit = layui.layedit;
+
+        /* 渲染表格 */
+        var insTb = tableX.render({
+            elem: '#courseTable',
+            url: 'page',
+            where:{zykc:1},
+            page: true,
+            toolbar: ['<p>',
+                '<button lay-event="add" class="layui-btn layui-btn-sm icon-btn"><i class="layui-icon">&#xe654;</i>添加专业课程</button>&nbsp;',
+                '</p>'].join(''),
+            cellMinWidth: 100,
+            cols: [[
+                {type: 'numbers'},
+                {field: 'name', title: '名称', sort: true},
+                {field: 'imageUrl', title: '缩略图', sort: true},
+                {field: 'type', title: '类别', templet:type,sort: true},
+                {field: 'content', title: '内容', sort: true},
+                {field: 'teacherId', title: '教师', templet:teacher,sort: true},
+                {field: 'classifyId', title: '课程分类', templet:classify,sort: true},
+                {
+                    field: 'createTime', title: '创建时间', templet: function (d) {
+                        return util.toDateString(d.createTime);
+                    }, sort: true
+                },
+                {title: '操作', toolbar: '#courseTbBar', align: 'center', width: 100, minWidth: 100}
+            ]]
+        });
+
+        
+        function teacher(d){
+        	var teachername = $.ajax({url:"/course/teacher/getById",data:{id:d.teacherId},async:false});
+        	return teachername.responseText;
+        }
+        
+        function classify(d){
+        	var name = $.ajax({url:"/course/classify/getById",data:{id:d.classifyId},async:false});
+        	return name.responseText;
+        }
+        
+        function type(d){
+        	if(d.type == "free"){
+        		return "免费课程"
+        	}else{
+        		return "<span style=\"color:red;\">试听课程</span>"
+        	}
+        }
+        
+        /* 表格搜索 */
+        form.on('submit(courseTbSearch)', function (data) {
+            insTb.reload({where: data.field, page: {curr: 1}});
+            return false;
+        });
+
+        /* 表格工具条点击事件 */
+        table.on('tool(courseTable)', function (obj) {
+           if ('del' === obj.event) { // 删除
+                doDel(obj);
+            }
+        });
+
+        /* 表格头工具栏点击事件 */
+        table.on('toolbar(courseTable)', function (obj) {
+            if ('add' === obj.event) { // 添加
+                showEditModel();
+            }
+        });
+
+        /* 显示表单弹窗 */
+        function showEditModel(mData) {
+            admin.open({
+                type: 1,
+                area: ['1100px','600px'],
+                title: (mData ? '修改' : '添加') + '',
+                content: $('#zykcTableloDig').html(),
+                success: function (layero, dIndex) {
+                	
+                	/* 渲染表格 */
+                    var insTbAll = tableX.render({
+                        elem: '#zykcTable',
+                        url: 'page',
+                        page: true,
+                        cellMinWidth: 100,
+                        cols: [[
+                            {type: 'numbers'},
+                            {field: 'name', title: '名称', sort: true},
+                            {field: 'imageUrl', title: '缩略图', sort: true},
+                            {field: 'type', title: '类别', templet:type,sort: true},
+                            {field: 'content', title: '内容', sort: true},
+                            {field: 'teacherId', title: '教师', templet:teacher,sort: true},
+                            {
+                                field: 'createTime', title: '创建时间', templet: function (d) {
+                                    return util.toDateString(d.createTime);
+                                }, sort: true
+                            },
+                            {field: 'classifyId', title: '课程分类', templet:classify,sort: true},
+                        ]]
+                    });
+
+                    /* 表格搜索 */
+                    form.on('submit(zykcTbSearch)', function (data) {
+                        insTbAll.reload({where: data.field, page: {curr: 1}});
+                        return false;
+                    });
+                	
+                    
+                    function teacher(d){
+                    	var teachername = $.ajax({url:"/course/teacher/getById",data:{id:d.teacherId},async:false});
+                    	return teachername.responseText;
+                    }
+                    
+                    function classify(d){
+                    	var name = $.ajax({url:"/course/classify/getById",data:{id:d.classifyId},async:false});
+                    	return name.responseText;
+                    }
+                    
+                    function type(d){
+                    	if(d.type == "free"){
+                    		return "免费课程"
+                    	}else{
+                    		return "<span style=\"color:red;\">试听课程</span>"
+                    	}
+                    }
+                    
+                    table.on('rowDouble(zykcTable)', function(obj){
+                        $.post('updatezykc', {id:obj.data.id,type:"add"}, function (res) {
+                        	layer.closeAll();
+                            if (0 === res.code) {
+                                layer.msg(res.msg, {icon: 1});
+                            } else {
+                                layer.msg(res.msg, {icon: 2, anim: 6});
+                            }
+                            insTb.reload({page: {curr: 1}});
+                        });
+                    });
+                }
+            });
+        }
+        
+        
+
+        /* 删除 */
+        function doDel(obj) {
+            var loadIndex = layer.load(2);
+            $.get('updatezykc', {id: obj.data.id,type:"del"}, function (res) {
+                layer.close(loadIndex);
+                if (0 === res.code) {
+                    layer.msg(res.msg, {icon: 1});
+                    insTb.reload({page: {curr: 1}});
+                } else {
+                    layer.msg(res.msg, {icon: 2, anim: 6});
+                }
+            });
+        }
+
+    });
+</script>
+</body>
+</html>

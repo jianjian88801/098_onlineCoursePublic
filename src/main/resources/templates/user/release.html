@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>我的产品</title>
+    <link rel="stylesheet" href="${ctxPath}/assets/libs/layui/css/layui.css"/>
+    <link rel="stylesheet" href="${ctxPath}/assets/css/style.css"/>
+    <link rel="stylesheet" href="${ctxPath}/assets/css/global.css"/>
+</head>
+<body>
+    <!-- 顶部 -->
+    <:include file="../common/header.html"/>
+    <div class="layui-container fly-marginTop fly-user-main">
+         <:include file="../common/user-nav.html"/>
+         <div class="fly-panel fly-panel-user" pad20>
+              <div class="layui-tab layui-tab-brief" lay-filter="user">
+                   <ul class="layui-tab-title" id="LAY_mine">
+                       <li class="layui-this"><a>发布课程</a></li>
+				   </ul>
+				   <div class="layui-tab-content" style="padding: 20px 0;">
+				        <div class="layui-tab-item layui-show">
+				             <!-- 表格工具栏 -->
+				             <form class="layui-form toolbar">
+				                <div class="layui-form-item">
+				                    <div class="layui-inline">
+				                        <label class="layui-form-label">名称:</label>
+				                        <div class="layui-input-inline">
+				                            <input name="name" class="layui-input" placeholder="输入名称"/>
+				                        </div>
+				                    </div>
+				                    <div class="layui-inline">&emsp;
+				                        <button class="layui-btn icon-btn" lay-filter="releaseTbSearch" lay-submit>
+				                            <i class="layui-icon">&#xe615;</i>搜索
+				                        </button>
+				                    </div>
+				                </div>
+				             </form>
+				             <table id="LAY_releaseList"></table>
+				        </div>
+				   </div>
+              </div>
+         </div>
+    </div>
+    <!-- 表格操作列 -->
+	<script type="text/html" id="releaseTbBar">
+    <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="edit">修改</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs"
+       data-dropdown="#noticeTbDelDrop{{d.LAY_INDEX}}" no-shade="true">删除</a>
+    <div class="dropdown-menu-nav dropdown-popconfirm dropdown-top-right layui-hide"
+         id="noticeTbDelDrop{{d.LAY_INDEX}}"
+         style="max-width: 200px;white-space: normal;min-width: auto;margin-left: 10px;">
+        <div class="dropdown-anchor"></div>
+        <div class="dropdown-popconfirm-title">
+            <i class="layui-icon layui-icon-help"></i>
+            确定要删除吗？
+        </div>
+        <div class="dropdown-popconfirm-btn">
+            <a class="layui-btn" btn-cancel>取消</a>
+            <a class="layui-btn layui-btn-normal" lay-event="del">确定</a>
+        </div>
+    </div>
+	</script>
+	<!-- 表单弹窗 -->
+	<script type="text/html" id="releaseEditDialog">
+    <form id="releaseEditForm" lay-filter="releaseEditForm" class="layui-form model-form">
+        <input name="id" type="hidden"/>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">名称:</label>
+            <div class="layui-input-block">
+                <input name="name" placeholder="请输入名称" class="layui-input"
+                       lay-verify="required" required/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">内容:</label>
+            <div class="layui-input-block">
+                <textarea name="content" id="eContentEdt" style="display: none;"></textarea>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">资料:</label>
+            <div class="layui-input-block" style="width:300px;float: left;margin-left: 0;">
+                <input name="url" placeholder="请上传资料" class="layui-input"
+                       lay-verify="required" required readonly/>
+            </div>
+            <div class="layui-input-inline layui-btn-container" style="width:auto;">
+			   <span type="button" class="layui-btn layui-btn-primary" id="LAY_video_upload">
+				<i class="layui-icon">&#xe67c;</i>上传资料
+			   </span>
+		    </div>
+        </div>
+        <div class="layui-form-item text-right">
+            <button class="layui-btn" lay-filter="noticeEditSubmit" lay-submit>保存</button>
+            <button class="layui-btn layui-btn-primary" type="button" ew-event="closeDialog">取消</button>
+        </div>
+    </form>
+	</script>
+    <!-- 底部 -->
+	<:include file="../common/footer.html"/>
+	<:include file="../common/js.html"/>
+	<script>
+	layui.cache.page = 'user';
+	layui.cache.user = {
+	  username: '${user.username}'
+	  ,uid: ${user.userId}
+	  ,avatar: '../../res/images/avatar/00.jpg'
+	  ,experience: 83
+	  ,sex: '男'
+	};
+    layui.config({
+	  version: new Date().getTime()
+	  ,base: '${ctxPath}/assets/module/'
+	}).extend({
+		user: 'user'
+	}).use('user');
+    </script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.egao.common.test.mapper.TeacherMapper">
+
+    <!-- 关联查询sql -->
+    <sql id="relSelect">
+        SELECT a.*
+        FROM t_teacher a
+        <where>
+            <if test="page!=null and page.pageData!=null">
+				<if test="page.pageData.id != null">
+					AND a.id = #{page.pageData.id}
+				</if>
+				<if test="page.pageData.nickName != null">
+                    AND a.nickName LIKE CONCAT('%', #{page.pageData.nickName}, '%')
+				</if>
+				<if test="page.pageData.remark != null">
+                    AND a.remark LIKE CONCAT('%', #{page.pageData.remark}, '%')
+				</if>
+				<if test="page.pageData.imageName != null">
+                    AND a.imageName LIKE CONCAT('%', #{page.pageData.imageName}, '%')
+				</if>
+            </if>
+        </where>
+    </sql>
+
+    <!-- 分页查询 -->
+    <select id="listPage" resultType="com.egao.common.test.entity.Teacher">
+        <include refid="relSelect"></include>
+    </select>
+
+    <!-- 查询全部 -->
+    <select id="listAll" resultType="com.egao.common.test.entity.Teacher">
+        <include refid="relSelect"></include>
+    </select>
+
+</mapper>
